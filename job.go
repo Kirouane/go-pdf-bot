@@ -3,7 +3,6 @@ package main
 import (
 	"time"
 
-	scribble "github.com/nanobox-io/golang-scribble"
 	"github.com/satori/go.uuid"
 )
 
@@ -25,8 +24,8 @@ type jobCreateController struct {
 }
 
 func (controller jobCreateController) action(params map[string]string) map[string]string {
-	storage := &storage{}
-	storage.connect()
+	//storage := &storage{}
+	//storage.connect()
 
 	j := &job{
 		ID:      uuid.NewV4().String(),
@@ -44,7 +43,7 @@ func (controller jobCreateController) action(params map[string]string) map[strin
 /**
  * Storage
  */
-type storage struct {
+/*type storage struct {
 	db *scribble.Driver
 }
 
@@ -63,3 +62,4 @@ func (s *storage) writeJob(j *job) {
 		panic(err)
 	}
 }
+*/

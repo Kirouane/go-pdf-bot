@@ -75,7 +75,6 @@ func main() {
 		decodeRequest,
 		encodeResponse,
 	)
-
 	http.Handle("/rpc", handler)
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }

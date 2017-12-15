@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 )
 
 type worker struct {
@@ -24,14 +25,22 @@ func (w *worker) start() {
 				fmt.Println("Job received :", job.ID)
 
 				d1 := []byte(job.HTML)
-				htmlFile := "/tmp/src.html"
-				ioutil.WriteFile(htmlFile, d1, 0644)
-				c := NewChrome("file:///"+htmlFile, job.ID)
-				pdf := c.run()
-				log.Println(job.Webhook)
-				if job.Webhook != "" {
-					w := webhook{}
-					w.push(pdf, job)
+				dir, err := os.Getwd()
+				if err != nil {
+					log.Fatal(err)
+				}
+				htmlFile := dir + "/src.html"
+				err = ioutil.WriteFile(htmlFile, d1, 0644)
+				if err != nil {
+					log.Fatal(err)
+				}
+				headless := NewHeadless()
+				pdf := headless.PrintPdf(job.ID, "file:///"+htmlFile)
+				headless.cancel()
+				err = ioutil.WriteFile(dir+"/storage/pdf/"+pdf.Filename, pdf.Content, 0644)
+
+				if err != nil {
+					log.Fatal(err)
 				}
 			}
 		}

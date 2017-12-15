@@ -9,12 +9,12 @@ import (
 
 type webhook struct{}
 
-func (webhook) push(p pdf, j job) {
-	req, err := http.NewRequest("POST", j.Webhook, bytes.NewBuffer(p.GetContent()))
+func (webhook) push(p Pdf, j job) {
+	req, err := http.NewRequest("POST", j.Webhook, bytes.NewBuffer(p.Content))
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(req)
+
 	req.Header.Set("X-Go-Pdf-Bot", "https://github.com/Kirouane/gopdfbot")
 	req.Header.Set("Content-Type", "application/pdf")
 

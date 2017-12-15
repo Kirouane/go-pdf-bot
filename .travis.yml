@@ -1,0 +1,23 @@
+dist: trusty
+
+addons:
+  chrome: stable
+
+language: go
+
+go:
+  - 1.9.*
+
+cache:
+  directories:
+    - .composer/cache
+
+before_install:
+  - google-chrome-stable --headless --disable-gpu --remote-debugging-port=9222 http://localhost &
+
+install:
+  - go get github.com/stretchr/testify 
+  - travis_retry go get -d ./...
+
+script:
+   - go test

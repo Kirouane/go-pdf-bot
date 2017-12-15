@@ -1,1 +1,4 @@
 storage
+.vscode
+debug*
+src.html
