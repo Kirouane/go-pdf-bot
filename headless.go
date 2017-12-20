@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"time"
 
 	chromedp "github.com/knq/chromedp"
 	"github.com/knq/chromedp/cdp"
@@ -49,6 +50,7 @@ func (h Headless) PrintPdf(name string, source string) Pdf {
 		h.ctx,
 		chromedp.Tasks{
 			chromedp.Navigate(source),
+			chromedp.Sleep(500 * time.Millisecond),
 			printPdfTask(&buf),
 		},
 	)
