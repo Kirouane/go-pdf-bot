@@ -18,6 +18,9 @@ before_install:
 install:
   - go get github.com/stretchr/testify 
   - travis_retry go get -d ./...
+  - go run $(ls -1 *.go | grep -v _test.go) > /dev/null 2>&1 &
 
 script:
    - go test
+   - cd test && go test
+   
