@@ -18,6 +18,7 @@ func (webhook) push(p Pdf, j job) {
 	req.Header.Set("X-Go-Pdf-Bot", "https://github.com/Kirouane/gopdfbot")
 	req.Header.Set("Content-Type", "application/pdf")
 
+	fmt.Println("Calling " + j.Webhook)
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {

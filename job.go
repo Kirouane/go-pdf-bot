@@ -24,9 +24,6 @@ type jobCreateController struct {
 }
 
 func (controller jobCreateController) action(params map[string]string) map[string]string {
-	//storage := &storage{}
-	//storage.connect()
-
 	j := &job{
 		ID:      uuid.NewV4().String(),
 		Date:    time.Now(),
@@ -35,31 +32,5 @@ func (controller jobCreateController) action(params map[string]string) map[strin
 	}
 
 	controller.Worker.addJob(*j)
-
-	//storage.writeJob(j)
 	return map[string]string{}
 }
-
-/**
- * Storage
- */
-/*type storage struct {
-	db *scribble.Driver
-}
-
-func (s *storage) connect() {
-	db, err := scribble.New("storage/", nil)
-	if err != nil {
-		panic(err)
-	}
-	s.db = db
-}
-
-func (s *storage) writeJob(j *job) {
-	err := s.db.Write("job", j.ID, j)
-
-	if err != nil {
-		panic(err)
-	}
-}
-*/

@@ -8,10 +8,6 @@ language: go
 go:
   - 1.9.*
 
-cache:
-  directories:
-    - .composer/cache
-
 before_install:
   - google-chrome-stable --headless --disable-gpu --remote-debugging-port=9222 http://localhost &
 
@@ -21,6 +17,6 @@ install:
   - go run $(ls -1 *.go | grep -v _test.go) > /dev/null 2>&1 &
 
 script:
-   - go test
-   - cd test && go test
-   
+  - go test
+  - cd test && go test
+  

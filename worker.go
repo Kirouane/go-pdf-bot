@@ -42,6 +42,11 @@ func (w *worker) start() {
 				if err != nil {
 					log.Fatal(err)
 				}
+
+				if "" != job.Webhook {
+					w := webhook{}
+					w.push(pdf, job)
+				}
 			}
 		}
 	}()
