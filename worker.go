@@ -8,12 +8,14 @@ import (
 )
 
 type worker struct {
-	JobQueue chan job
+	JobQueue    chan job
+	headlessURL string
 }
 
-func newWorker(j chan job) worker {
+func newWorker(headlessURL string, j chan job) worker {
 	return worker{
-		JobQueue: j,
+		JobQueue:    j,
+		headlessURL: headlessURL,
 	}
 }
 
@@ -34,7 +36,7 @@ func (w *worker) start() {
 				if err != nil {
 					log.Fatal(err)
 				}
-				headless := NewHeadless()
+				headless := NewHeadless(w.headlessURL)
 				pdf := headless.PrintPdf(job.ID, "file:///"+htmlFile)
 				headless.cancel()
 				err = ioutil.WriteFile(dir+"/storage/pdf/"+pdf.Filename, pdf.Content, 0644)

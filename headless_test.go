@@ -14,7 +14,7 @@ func TestHeadlessRun(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	headless := NewHeadless()
+	headless := NewHeadless("http://localhost:9222/json")
 	pdf := headless.PrintPdf("testId", "file:///"+dir+"/config/test/chrome/test.html")
 	assert.Equal(t, "testId.pdf", pdf.Filename, "the should be equal")
 	assert.NotNil(t, pdf.Content, "Should not nil")

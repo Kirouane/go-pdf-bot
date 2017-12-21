@@ -25,16 +25,17 @@ type Pdf struct {
 }
 
 //NewHeadless service
-func NewHeadless() Headless {
+func NewHeadless(url string) Headless {
 	var err error
 	// create context
 	ctxt, cancel := context.WithCancel(context.Background())
-	//defer cancel()
 
 	// create chrome
 	//cpd, err := chromedp.New(ctxt, chromedp.WithTargets(client.New().WatchPageTargets(ctxt)), chromedp.WithLog(log.Printf))
-	cpd, err := chromedp.New(ctxt, chromedp.WithTargets(client.New().WatchPageTargets(ctxt)))
+	c := client.New()
+	client.URL(url)(c)
 
+	cpd, err := chromedp.New(ctxt, chromedp.WithTargets(c.WatchPageTargets(ctxt)))
 	if err != nil {
 		log.Fatal(err)
 	}
