@@ -3,12 +3,38 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"flag"
 	"log"
 	"net/http"
 
 	"github.com/go-kit/kit/endpoint"
 	httptransport "github.com/go-kit/kit/transport/http"
 )
+
+func main() {
+	port := flag.String("p", "8080", "Port")
+	headlessURL := flag.String("-c", "http://localhost:9222/json", "Chrome headless url")
+	queueSize := flag.Int("-s", 50, "Queue size")
+	flag.Parse()
+
+	jobQueue := make(chan job, *queueSize)
+
+	worker := newWorker(*headlessURL, jobQueue)
+	worker.start()
+
+	router := jsonrpcRouter{
+		map[string]controller{},
+	}
+	router.routes["job/create"] = jobCreateController{worker}
+
+	handler := httptransport.NewServer(
+		rpcEndpoint(router),
+		decodeRequest,
+		encodeResponse,
+	)
+	http.Handle("/rpc", handler)
+	log.Fatal(http.ListenAndServe(":"+*port, nil))
+}
 
 // JsonRpcRuter router
 
@@ -56,27 +82,6 @@ func (j *jsonrpcRouter) route(_ context.Context, request jsonrpcRequest) (jsonrp
 
 	response.Result = j.routes[request.Method].action(request.Params)
 	return response, nil
-}
-
-var jobQueue = make(chan job, 10)
-
-func main() {
-
-	worker := newWorker(jobQueue)
-	worker.start()
-
-	router := jsonrpcRouter{
-		map[string]controller{},
-	}
-	router.routes["job/create"] = jobCreateController{worker}
-
-	handler := httptransport.NewServer(
-		rpcEndpoint(router),
-		decodeRequest,
-		encodeResponse,
-	)
-	http.Handle("/rpc", handler)
-	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
 func rpcEndpoint(router jsonrpcRouter) endpoint.Endpoint {
