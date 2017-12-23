@@ -1,0 +1,12 @@
+#This docker-compose is only for local development. Do not use it in production
+version: '3'
+services:
+  go_pdf_bot:
+    build: .
+    network_mode: host #gives pdf-bot ability to call host
+    ports:
+      - 8080:8080
+  chrome_headless:
+    image: yukinying/chrome-headless
+    ports:
+      - 9222:9222
