@@ -5,10 +5,10 @@ import (
 	"log"
 	"time"
 
-	chromedp "github.com/knq/chromedp"
-	"github.com/knq/chromedp/cdp"
-	"github.com/knq/chromedp/cdp/page"
-	"github.com/knq/chromedp/client"
+	"github.com/chromedp/cdproto/cdp"
+	"github.com/chromedp/cdproto/page"
+	chromedp "github.com/chromedp/chromedp"
+	"github.com/chromedp/chromedp/client"
 )
 
 // Headless service
@@ -52,7 +52,16 @@ func (h Headless) PrintPdf(name string, source string) Pdf {
 		chromedp.Tasks{
 			chromedp.Navigate(source),
 			chromedp.Sleep(500 * time.Millisecond),
-			printPdfTask(&buf),
+			chromedp.ActionFunc(func(ctxt context.Context, e cdp.Executor) error {
+				var err error
+				buf, err = page.PrintToPDF().Do(ctxt, e)
+
+				if err != nil {
+					return err
+				}
+
+				return err
+			}),
 		},
 	)
 
@@ -64,17 +73,4 @@ func (h Headless) PrintPdf(name string, source string) Pdf {
 		name + ".pdf",
 		buf,
 	}
-}
-
-func printPdfTask(buf *[]byte) chromedp.Action {
-	return chromedp.ActionFunc(func(ctxt context.Context, h cdp.Handler) error {
-		var err error
-		*buf, err = page.PrintToPDF().Do(ctxt, h)
-
-		if err != nil {
-			return err
-		}
-
-		return err
-	})
 }
