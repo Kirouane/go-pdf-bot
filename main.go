@@ -4,8 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"flag"
-	"log"
+
 	"net/http"
+	"os"
+
+	"github.com/go-kit/kit/log"
 
 	"github.com/go-kit/kit/endpoint"
 	httptransport "github.com/go-kit/kit/transport/http"
@@ -22,10 +25,16 @@ func main() {
 	worker := newWorker(*headlessURL, jobQueue)
 	worker.start()
 
-	router := jsonrpcRouter{
-		map[string]controller{},
+	logger := log.NewLogfmtLogger(os.Stderr)
+
+	var router Router
+	router = jsonrpcRouter{
+		map[string]controller{
+			"job/create": jobCreateController{worker},
+		},
 	}
-	router.routes["job/create"] = jobCreateController{worker}
+
+	router = loggingMiddleware{logger, router}
 
 	handler := httptransport.NewServer(
 		rpcEndpoint(router),
@@ -33,7 +42,7 @@ func main() {
 		encodeResponse,
 	)
 	http.Handle("/rpc", handler)
-	log.Fatal(http.ListenAndServe(":"+*port, nil))
+	logger.Log(http.ListenAndServe(":"+*port, nil))
 }
 
 // JsonRpcRuter router
@@ -58,6 +67,11 @@ type jsonrpcResponse struct {
 	ID      string               `json:"id"`
 }
 
+//Router interface
+type Router interface {
+	route(ctx context.Context, request jsonrpcRequest) (jsonrpcResponse, error)
+}
+
 type jsonrpcRouter struct {
 	routes map[string]controller
 }
@@ -66,7 +80,7 @@ type controller interface {
 	action(params map[string]string) map[string]string
 }
 
-func (j *jsonrpcRouter) route(_ context.Context, request jsonrpcRequest) (jsonrpcResponse, error) {
+func (j jsonrpcRouter) route(ctx context.Context, request jsonrpcRequest) (jsonrpcResponse, error) {
 	response := jsonrpcResponse{
 		"2.0",
 		map[string]string{},
@@ -84,7 +98,7 @@ func (j *jsonrpcRouter) route(_ context.Context, request jsonrpcRequest) (jsonrp
 	return response, nil
 }
 
-func rpcEndpoint(router jsonrpcRouter) endpoint.Endpoint {
+func rpcEndpoint(router Router) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(jsonrpcRequest)
 		response, error := router.route(ctx, req)
