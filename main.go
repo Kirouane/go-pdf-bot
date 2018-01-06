@@ -21,7 +21,7 @@ import (
 func main() {
 	port := flag.String("p", "8080", "Port")
 	headlessURL := flag.String("-c", "http://localhost:9222/json", "Chrome headless url")
-	queueSize := flag.Int("-s", 50, "Queue size")
+	queueSize := flag.Int("-s", 100, "Queue size")
 	flag.Parse()
 
 	jobQueue := make(chan job, *queueSize)

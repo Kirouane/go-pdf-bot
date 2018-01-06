@@ -1,21 +1,18 @@
 dist: trusty
 
-addons:
-  chrome: stable
-
 language: go
 
 go:
   - 1.9.*
 
-before_install:
-  - google-chrome-stable --headless --disable-gpu --remote-debugging-port=9222 http://localhost &
+services:
+  - docker
 
 install:
   - go get github.com/stretchr/testify 
   - travis_retry go get -d ./...
-  - go run $(ls -1 *.go | grep -v _test.go) > /dev/null 2>&1 &
-  - sleep 5
+  - go build .
+  - docker-compose up -d
 
 script:
   - go test
