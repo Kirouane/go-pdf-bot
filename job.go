@@ -24,8 +24,9 @@ type jobCreateController struct {
 }
 
 func (controller jobCreateController) action(params map[string]string) map[string]string {
+	id, _ := uuid.NewV4()
 	j := &job{
-		ID:      uuid.NewV4().String(),
+		ID:      id.String(),
 		Date:    time.Now(),
 		HTML:    params["html"],
 		Webhook: params["webhook"],

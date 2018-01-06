@@ -8,16 +8,20 @@ import (
 	"net/http"
 	"os"
 
+	stdprometheus "github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+
 	"github.com/go-kit/kit/log"
+	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
+	httptransport "github.com/go-kit/kit/transport/http"
 
 	"github.com/go-kit/kit/endpoint"
-	httptransport "github.com/go-kit/kit/transport/http"
 )
 
 func main() {
 	port := flag.String("p", "8080", "Port")
 	headlessURL := flag.String("-c", "http://localhost:9222/json", "Chrome headless url")
-	queueSize := flag.Int("-s", 50, "Queue size")
+	queueSize := flag.Int("-s", 100, "Queue size")
 	flag.Parse()
 
 	jobQueue := make(chan job, *queueSize)
@@ -25,8 +29,31 @@ func main() {
 	worker := newWorker(*headlessURL, jobQueue)
 	worker.start()
 
+	//logger
 	logger := log.NewLogfmtLogger(os.Stderr)
 
+	//instru
+	fieldKeys := []string{"method", "error"}
+	requestCount := kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
+		Namespace: "default",
+		Subsystem: "go_pdf_bot",
+		Name:      "request_count",
+		Help:      "Number of requests received.",
+	}, fieldKeys)
+	requestLatency := kitprometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
+		Namespace: "default",
+		Subsystem: "go_pdf_bot",
+		Name:      "request_latency_microseconds",
+		Help:      "Total duration of requests in microseconds.",
+	}, fieldKeys)
+	countResult := kitprometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
+		Namespace: "default",
+		Subsystem: "go_pdf_bot",
+		Name:      "count_result",
+		Help:      "The result of each count method.",
+	}, []string{}) // no fields here
+
+	//router
 	var router Router
 	router = jsonrpcRouter{
 		map[string]controller{
@@ -35,6 +62,7 @@ func main() {
 	}
 
 	router = loggingMiddleware{logger, router}
+	router = instrumentingMiddleware{requestCount, requestLatency, countResult, router}
 
 	handler := httptransport.NewServer(
 		rpcEndpoint(router),
@@ -42,6 +70,7 @@ func main() {
 		encodeResponse,
 	)
 	http.Handle("/rpc", handler)
+	http.Handle("/metrics", promhttp.Handler())
 	logger.Log(http.ListenAndServe(":"+*port, nil))
 }
 
